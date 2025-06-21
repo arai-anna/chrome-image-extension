@@ -5,8 +5,11 @@ const state = {
   blackImageCache: new Map(), // サイズ別の黒色画像キャッシュ
 };
 
-// 黒色画像を生成する関数
-const generateBlackImage = (width, height) => {
+// 猫画像のURL
+const CAT_IMAGE_URL = chrome.runtime.getURL("image/cat1.jpg");
+
+// 猫画像を生成する関数（仮画像用）
+const generateCatImage = (width, height) => {
   const cacheKey = `${width}x${height}`;
 
   // キャッシュから取得
@@ -14,19 +17,89 @@ const generateBlackImage = (width, height) => {
     return state.blackImageCache.get(cacheKey);
   }
 
-  // Canvas で黒色画像を生成
+  // 同期的に仮の画像を生成して返す
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext("2d");
+
+  // 仮の猫色で塗りつぶし
+  tempCtx.fillStyle = "#D2B48C"; // 猫色っぽい色
+  tempCtx.fillRect(0, 0, width, height);
+
+  const tempDataUrl = tempCanvas.toDataURL("image/png");
+  state.blackImageCache.set(cacheKey, tempDataUrl);
+
+  return tempDataUrl;
+};
+
+// 特定の画像要素用の実際の猫画像を生成する関数
+const generateActualCatImage = (width, height, targetImg) => {
+  const cacheKey = `actual_${width}x${height}`;
+
+  // 実際の猫画像のキャッシュをチェック
+  if (state.blackImageCache.has(cacheKey)) {
+    const cachedDataUrl = state.blackImageCache.get(cacheKey);
+    updateImageWithCachedData(targetImg, cachedDataUrl);
+    return;
+  }
+
+  // Canvas で猫画像をリサイズ
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "#ffcce5";
-  ctx.fillRect(0, 0, width, height);
+  // 猫画像を読み込み
+  const img = new Image();
+  img.onload = () => {
+    // object-fit: cover の実装
+    const imgAspect = img.width / img.height;
+    const canvasAspect = width / height;
 
-  const dataUrl = canvas.toDataURL("image/png");
-  state.blackImageCache.set(cacheKey, dataUrl);
+    let sx = 0,
+      sy = 0,
+      sw = img.width,
+      sh = img.height;
 
-  return dataUrl;
+    if (imgAspect > canvasAspect) {
+      // 画像が横長の場合、横をクロップ
+      sw = img.height * canvasAspect;
+      sx = (img.width - sw) / 2;
+    } else {
+      // 画像が縦長の場合、縦をクロップ
+      sh = img.width / canvasAspect;
+      sy = (img.height - sh) / 2;
+    }
+
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+    const dataUrl = canvas.toDataURL("image/png");
+
+    // キャッシュに保存
+    state.blackImageCache.set(cacheKey, dataUrl);
+
+    // 特定の画像要素を更新
+    updateImageWithCachedData(targetImg, dataUrl);
+  };
+  img.onerror = () => {
+    console.error("Failed to load cat image");
+  };
+
+  // CORSの問題を回避するためにcrossOriginを設定
+  img.crossOrigin = "anonymous";
+  img.src = CAT_IMAGE_URL;
+};
+
+// キャッシュされたデータで画像を更新する関数
+const updateImageWithCachedData = (targetImg, dataUrl) => {
+  const existingData = state.imageDataMap.get(targetImg);
+  if (existingData) {
+    // 現在表示されている画像が仮画像の場合のみ更新
+    if (targetImg.src === existingData.black) {
+      targetImg.src = dataUrl;
+    }
+    existingData.black = dataUrl;
+  }
 };
 
 // 画像が対象かどうかを判定
@@ -97,17 +170,17 @@ const processBackgroundImages = () => {
         const height = Math.max(rect.height, 100);
 
         if (width > 32 && height > 32) {
-          const blackDataUrl = generateBlackImage(width, height);
+          const catDataUrl = generateCatImage(width, height);
 
           // データを保存
           state.imageDataMap.set(element, {
             original: backgroundImage,
-            black: `url("${blackDataUrl}")`,
+            black: `url("${catDataUrl}")`,
           });
 
-          // 黒色モードでない場合（初回）は黒色に変更
+          // 黒色モードでない場合（初回）は猫画像に変更
           if (!state.isBlackMode) {
-            element.style.backgroundImage = `url("${blackDataUrl}")`;
+            element.style.backgroundImage = `url("${catDataUrl}")`;
           }
         }
       }
@@ -116,7 +189,7 @@ const processBackgroundImages = () => {
 };
 
 // picture要素のsource要素も処理
-const processPictureElements = (img, blackDataUrl, isRestore = false) => {
+const processPictureElements = (img, catDataUrl, isRestore = false) => {
   const picture = img.closest("picture");
   if (picture) {
     const sources = picture.querySelectorAll("source");
@@ -127,15 +200,15 @@ const processPictureElements = (img, blackDataUrl, isRestore = false) => {
         // 復元
         source.srcset = existingSourceData.original;
       } else if (!isRestore) {
-        // 黒色に変更
+        // 猫画像に変更
         if (!existingSourceData) {
           // 初回処理
           state.imageDataMap.set(source, {
             original: source.srcset,
-            black: blackDataUrl,
+            black: catDataUrl,
           });
         }
-        source.srcset = blackDataUrl;
+        source.srcset = catDataUrl;
       }
     });
   }
@@ -144,23 +217,13 @@ const processPictureElements = (img, blackDataUrl, isRestore = false) => {
 // iframe全体を黒色画像で覆う
 const processIframes = () => {
   const iframes = document.querySelectorAll("iframe");
-  console.log(`Found ${iframes.length} iframe elements`);
 
-  iframes.forEach((iframe, index) => {
-    console.log(`Processing iframe ${index + 1}:`, {
-      src: iframe.src ? iframe.src.substring(0, 100) + "..." : "no src",
-      width: iframe.offsetWidth,
-      height: iframe.offsetHeight,
-    });
-
+  iframes.forEach((iframe) => {
     // 小さいiframeは除外
     const width = iframe.offsetWidth || parseInt(iframe.width) || 0;
     const height = iframe.offsetHeight || parseInt(iframe.height) || 0;
 
     if (width <= 32 || height <= 32) {
-      console.log(
-        `Skipped iframe ${index + 1} (too small: ${width}x${height})`
-      );
       return;
     }
 
@@ -177,16 +240,11 @@ const processIframes = () => {
           // 黒色に変更（オーバーレイを表示）
           overlay.style.display = "block";
         }
-        console.log(
-          `Switched iframe ${index + 1} to ${
-            state.isBlackMode ? "original" : "black"
-          }`
-        );
       }
     } else {
       // 新しいiframeの場合は処理
-      // 黒色画像を生成
-      const blackDataUrl = generateBlackImage(width, height);
+      // 猫画像を生成
+      const catDataUrl = generateCatImage(width, height);
 
       // オーバーレイ要素を作成
       const overlay = document.createElement("div");
@@ -195,7 +253,7 @@ const processIframes = () => {
       overlay.style.left = "0";
       overlay.style.width = width + "px";
       overlay.style.height = height + "px";
-      overlay.style.backgroundImage = `url("${blackDataUrl}")`;
+      overlay.style.backgroundImage = `url("${catDataUrl}")`;
       overlay.style.backgroundSize = "cover";
       overlay.style.zIndex = "9999";
       overlay.style.pointerEvents = "none";
@@ -214,39 +272,19 @@ const processIframes = () => {
       state.imageDataMap.set(iframe, {
         overlay: overlay,
       });
-
-      console.log(`Created black overlay for iframe ${index + 1}`);
     }
   });
 };
 
 // 画像を切り替える関数
 const toggleImages = () => {
-  console.log("=== Toggle Images Started ===");
-
   // img要素の処理
   const images = document.querySelectorAll("img");
-  console.log(`Found ${images.length} img elements`);
-
   let processedCount = 0;
   let skippedCount = 0;
 
-  images.forEach((img, index) => {
-    console.log(`Processing img ${index + 1}:`, {
-      src: img.src.substring(0, 100) + "...",
-      naturalWidth: img.naturalWidth,
-      naturalHeight: img.naturalHeight,
-      width: img.width,
-      height: img.height,
-      widthAttr: img.getAttribute("width"),
-      heightAttr: img.getAttribute("height"),
-      loading: img.getAttribute("loading"),
-      className: img.className,
-      hasPicture: !!img.closest("picture"),
-    });
-
+  images.forEach((img) => {
     if (!isTargetImage(img)) {
-      console.log(`Skipped img ${index + 1} (not target)`);
       skippedCount++;
       return;
     }
@@ -256,7 +294,6 @@ const toggleImages = () => {
 
     if (existingData) {
       // 既存データがある場合は切り替え
-      console.log(`Switching existing img ${index + 1}`);
       img.src = state.isBlackMode ? existingData.original : existingData.black;
 
       // data-src属性も復元
@@ -273,58 +310,57 @@ const toggleImages = () => {
       processedCount++;
     } else {
       // 新しい画像の場合は処理
-      let width = img.naturalWidth || img.width;
-      let height = img.naturalHeight || img.height;
+      // 表示サイズを優先して取得
+      let width = img.offsetWidth || img.width;
+      let height = img.offsetHeight || img.height;
 
-      // 属性からサイズを取得（lazy loading対応）
+      // CSSからサイズを取得
+      if (width === 0 || height === 0) {
+        const computedStyle = window.getComputedStyle(img);
+        width = parseInt(computedStyle.width) || 0;
+        height = parseInt(computedStyle.height) || 0;
+      }
+
+      // 属性からサイズを取得（最後の手段）
       if (width === 0 || height === 0) {
         width = parseInt(img.getAttribute("width")) || 200;
         height = parseInt(img.getAttribute("height")) || 200;
       }
 
-      // CSSからサイズを取得
-      if (width === 0 || height === 0) {
-        const computedStyle = window.getComputedStyle(img);
-        width = parseInt(computedStyle.width) || 200;
-        height = parseInt(computedStyle.height) || 200;
-      }
-
-      console.log(`Final size for img ${index + 1}: ${width}x${height}`);
-
       if (width > 0 && height > 0) {
-        const blackDataUrl = generateBlackImage(width, height);
-
-        // 元の画像URLを取得（srcまたはdata-src）
+        // 元の画像URLを取得
         const originalSrc = img.src || img.getAttribute("data-src");
+
+        // 仮の猫画像を生成
+        const tempCatDataUrl = generateCatImage(width, height);
 
         // データを保存
         state.imageDataMap.set(img, {
           original: originalSrc,
-          black: blackDataUrl,
+          black: tempCatDataUrl,
         });
 
-        // 黒色モードでない場合（初回）は黒色に変更
+        // 黒色モードでない場合（初回）は猫画像に変更
         if (!state.isBlackMode) {
-          console.log(`Converting new img ${index + 1} to black`);
-          img.src = blackDataUrl;
+          img.src = tempCatDataUrl;
 
           // data-src属性も更新
           if (img.getAttribute("data-src")) {
-            img.setAttribute("data-src", blackDataUrl);
+            img.setAttribute("data-src", tempCatDataUrl);
           }
 
           // picture要素のsource要素も処理
-          processPictureElements(img, blackDataUrl, false);
+          processPictureElements(img, tempCatDataUrl, false);
+
+          // 実際の猫画像を非同期で生成して更新
+          generateActualCatImage(width, height, img);
         }
         processedCount++;
       } else {
-        console.log(`Skipped img ${index + 1} (invalid size)`);
         skippedCount++;
       }
     }
   });
-
-  console.log(`Processed: ${processedCount}, Skipped: ${skippedCount}`);
 
   // background-image要素の処理
   processBackgroundImages();
@@ -333,8 +369,6 @@ const toggleImages = () => {
   processIframes();
 
   state.isBlackMode = !state.isBlackMode;
-  console.log(`New mode: ${state.isBlackMode ? "BLACK" : "ORIGINAL"}`);
-  console.log("=== Toggle Images Completed ===");
 };
 
 // ポップアップからのメッセージを受信
