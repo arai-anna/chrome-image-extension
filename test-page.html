@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chrome拡張機能テストページ</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .image-item {
+        text-align: center;
+      }
+      .image-item img {
+        max-width: 100%;
+        height: auto;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+      .instructions {
+        background: #f0f8ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      .small-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        margin: 0 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Chrome拡張機能テストページ</h1>
+
+      <div class="instructions">
+        <h2>テスト手順</h2>
+        <ol>
+          <li>Chrome拡張機能を読み込んでください</li>
+          <li>拡張機能のアイコンをクリックしてポップアップを開いてください</li>
+          <li>「画像を黒色に変更」ボタンをクリックしてください</li>
+          <li>下の画像が黒色に変わることを確認してください</li>
+          <li>
+            もう一度ボタンをクリックして元の画像に戻ることを確認してください
+          </li>
+        </ol>
+      </div>
+
+      <h2>テスト画像</h2>
+      <div class="image-grid">
+        <div class="image-item">
+          <h3>大きな画像</h3>
+          <img
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2ZmNmI2YiIvPgogIDx0ZXh0IHg9IjE1MCIgeT0iMTAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI0IiBmaWxsPSJ3aGl0ZSI+TGFyZ2UgSW1hZ2U8L3RleHQ+Cjwvc3ZnPg=="
+            alt="大きな画像"
+          />
+        </div>
+        <div class="image-item">
+          <h3>中サイズ画像</h3>
+          <img
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iIzRlY2RjNCIvPgogIDx0ZXh0IHg9IjEwMCIgeT0iNzUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IndoaXRlIj5NZWRpdW0gSW1hZ2U8L3RleHQ+Cjwvc3ZnPg=="
+            alt="中サイズ画像"
+          />
+        </div>
+        <div class="image-item">
+          <h3>小さな画像</h3>
+          <img
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzQ1YjdkMSIvPgogIDx0ZXh0IHg9Ijc1IiB5PSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0id2hpdGUiPlNtYWxsIEltYWdlPC90ZXh0Pgo8L3N2Zz4="
+            alt="小さな画像"
+          />
+        </div>
+      </div>
+
+      <h2>アイコンサイズ画像（変更されないはず）</h2>
+      <p>
+        これらの小さなアイコンは変更されません：
+        <img
+          class="small-icon"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjZmY5ZjQzIi8+CiAgPHRleHQgeD0iMTIiIHk9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSI+STwvdGV4dD4KPC9zdmc+"
+          alt="アイコン1"
+        />
+        <img
+          class="small-icon"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiBmaWxsPSIjNmM1Y2U3Ii8+CiAgPHRleHQgeD0iOCIgeT0iOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI4IiBmaWxsPSJ3aGl0ZSI+STwvdGV4dD4KPC9zdmc+"
+          alt="アイコン2"
+        />
+        <img
+          class="small-icon"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjYTU1ZWVhIi8+CiAgPHRleHQgeD0iMTYiIHk9IjE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSI+STwvdGV4dD4KPC9zdmc+"
+          alt="アイコン3"
+        />
+      </p>
+
+      <h2>SVG画像（変更されないはず）</h2>
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="#26de81" />
+        <text x="50" y="55" text-anchor="middle" fill="white" font-size="12">
+          SVG
+        </text>
+      </svg>
+    </div>
+  </body>
+</html>
