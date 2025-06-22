@@ -1,6 +1,23 @@
+// 定数定義
+const CONSTANTS = {
+  CACHE_SIZE: 50,
+  IMAGE_COUNT: 20,
+  MIN_SIZE_THRESHOLD: 37,
+  DEFAULT_SIZE: 200,
+  CANVAS_MIN_SIZE: 100,
+  Z_INDEX: 999999,
+  BUDDHA_COLOR: "#a9a9a9",
+  HOVER_COLOR: "#4d4d4d",
+  CROP_POSITIONS: {
+    TOP: 0,
+    CENTER: 1,
+    BOTTOM: 2,
+  },
+};
+
 // LRUキャッシュクラス
 class LRUCache {
-  constructor(maxSize = 50) {
+  constructor(maxSize = CONSTANTS.CACHE_SIZE) {
     this.maxSize = maxSize;
     this.cache = new Map();
   }
@@ -40,14 +57,14 @@ class LRUCache {
 const state = {
   isBlackMode: false,
   imageDataMap: new WeakMap(),
-  blackImageCache: new LRUCache(50), // LRUキャッシュに変更（最大50個）
+  blackImageCache: new LRUCache(CONSTANTS.CACHE_SIZE),
   isFeatureEnabled: false,
   floatingButton: null,
 };
 
 // ランダムな仏像画像URLを取得する関数（パフォーマンス向上版）
 const getRandomBuddhaImageURL = () => {
-  const randomNumber = Math.floor(Math.random() * 20) + 1; // 1-20のランダム数値
+  const randomNumber = Math.floor(Math.random() * CONSTANTS.IMAGE_COUNT) + 1;
   return chrome.runtime.getURL(`image/${randomNumber}.jpg`);
 };
 
@@ -67,7 +84,7 @@ const generateBuddhaImage = (width, height) => {
   const tempCtx = tempCanvas.getContext("2d");
 
   // 仮の仏像色で塗りつぶし
-  tempCtx.fillStyle = "#a9a9a9"; // 仏像色っぽい色
+  tempCtx.fillStyle = CONSTANTS.BUDDHA_COLOR;
   tempCtx.fillRect(0, 0, width, height);
 
   const tempDataUrl = tempCanvas.toDataURL("image/png");
@@ -267,8 +284,8 @@ const getImageSize = (img) => {
 
   // 最後の手段としてデフォルト値
   if (width === 0 || height === 0) {
-    width = width || 200;
-    height = height || 200;
+    width = width || CONSTANTS.DEFAULT_SIZE;
+    height = height || CONSTANTS.DEFAULT_SIZE;
   }
 
   return { width, height };
@@ -282,9 +299,14 @@ const isTargetImage = (img) => {
     return false;
   }
 
-  // 小さいアイコン画像を除外（37x37px以下）
+  // 小さいアイコン画像を除外
   const { width, height } = getImageSize(img);
-  if (width > 0 && height > 0 && width <= 37 && height <= 37) {
+  if (
+    width > 0 &&
+    height > 0 &&
+    width <= CONSTANTS.MIN_SIZE_THRESHOLD &&
+    height <= CONSTANTS.MIN_SIZE_THRESHOLD
+  ) {
     return false;
   }
 
@@ -347,10 +369,13 @@ const processBackgroundImages = () => {
       } else {
         // 新しい要素の場合は処理
         const rect = element.getBoundingClientRect();
-        const width = Math.max(rect.width, 100);
-        const height = Math.max(rect.height, 100);
+        const width = Math.max(rect.width, CONSTANTS.CANVAS_MIN_SIZE);
+        const height = Math.max(rect.height, CONSTANTS.CANVAS_MIN_SIZE);
 
-        if (width > 37 && height > 37) {
+        if (
+          width > CONSTANTS.MIN_SIZE_THRESHOLD &&
+          height > CONSTANTS.MIN_SIZE_THRESHOLD
+        ) {
           const buddhaDataUrl = generateBuddhaImage(width, height);
 
           // データを保存
@@ -405,7 +430,10 @@ const processIframes = () => {
     const width = iframe.offsetWidth || parseInt(iframe.width) || 0;
     const height = iframe.offsetHeight || parseInt(iframe.height) || 0;
 
-    if (width <= 37 || height <= 37) {
+    if (
+      width <= CONSTANTS.MIN_SIZE_THRESHOLD ||
+      height <= CONSTANTS.MIN_SIZE_THRESHOLD
+    ) {
       return;
     }
 
@@ -558,8 +586,8 @@ const createFloatingButton = () => {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 999999;
-    background: #a9a9a9;
+    z-index: ${CONSTANTS.Z_INDEX};
+    background: ${CONSTANTS.BUDDHA_COLOR};
     color: white;
     padding: 12px 16px;
     border-radius: 8px;
@@ -575,12 +603,12 @@ const createFloatingButton = () => {
 
   // ホバー効果
   button.addEventListener("mouseenter", () => {
-    button.style.background = "#4d4d4d";
+    button.style.background = CONSTANTS.HOVER_COLOR;
     button.style.transform = "translateY(-2px)";
   });
 
   button.addEventListener("mouseleave", () => {
-    button.style.background = "#a9a9a9";
+    button.style.background = CONSTANTS.BUDDHA_COLOR;
     button.style.transform = "translateY(0)";
   });
 
