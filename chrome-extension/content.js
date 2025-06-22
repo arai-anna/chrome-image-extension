@@ -1,8 +1,46 @@
+// LRUキャッシュクラス
+class LRUCache {
+  constructor(maxSize = 50) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+  }
+
+  get(key) {
+    if (this.cache.has(key)) {
+      // アクセスされたアイテムを最新に移動
+      const value = this.cache.get(key);
+      this.cache.delete(key);
+      this.cache.set(key, value);
+      return value;
+    }
+    return undefined;
+  }
+
+  set(key, value) {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // 最も古いアイテムを削除
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+
+  has(key) {
+    return this.cache.has(key);
+  }
+
+  clear() {
+    this.cache.clear();
+  }
+}
+
 // 画像の状態管理
 const state = {
   isBlackMode: false,
   imageDataMap: new WeakMap(),
-  blackImageCache: new Map(), // サイズ別の仏像画像キャッシュ
+  blackImageCache: new LRUCache(50), // LRUキャッシュに変更（最大50個）
   isFeatureEnabled: false,
   floatingButton: null,
 };
@@ -240,16 +278,7 @@ const getImageSize = (img) => {
 const isTargetImage = (img) => {
   // srcまたはdata-srcがあるかチェック
   const src = img.src || img.getAttribute("data-src");
-  if (!src) {
-    return false;
-  }
-
-  // ファイル拡張子による SVG 画像とGIF画像を除外
-  if (src.toLowerCase().includes(".svg") && !src.startsWith("data:")) {
-    return false;
-  }
-
-  if (src.toLowerCase().includes(".gif") && !src.startsWith("data:")) {
+  if (shouldExcludeImage(src)) {
     return false;
   }
 
@@ -262,11 +291,38 @@ const isTargetImage = (img) => {
   return true;
 };
 
-// background-imageを持つ要素を処理
-const processBackgroundImages = () => {
-  const allElements = document.querySelectorAll("*");
+// 除外判定を統一する関数
+const shouldExcludeImage = (src) => {
+  if (!src) return true;
 
-  allElements.forEach((element) => {
+  const lowerSrc = src.toLowerCase();
+  return (
+    (lowerSrc.includes(".svg") && !src.startsWith("data:")) ||
+    (lowerSrc.includes(".gif") && !src.startsWith("data:"))
+  );
+};
+
+// background-imageを持つ要素を処理（最適化版）
+const processBackgroundImages = () => {
+  // 一般的にbackground-imageを持つ可能性の高い要素のみを対象
+  const targetSelectors = [
+    "div",
+    "section",
+    "header",
+    "footer",
+    "article",
+    "aside",
+    "main",
+    "nav",
+    "figure",
+    "span",
+    "a",
+    "button",
+  ];
+
+  const elements = document.querySelectorAll(targetSelectors.join(","));
+
+  elements.forEach((element) => {
     const computedStyle = window.getComputedStyle(element);
     const backgroundImage = computedStyle.backgroundImage;
 
@@ -277,21 +333,17 @@ const processBackgroundImages = () => {
       !backgroundImage.includes("gradient")
     ) {
       // SVGやGIF画像を除外
-      if (
-        backgroundImage.toLowerCase().includes(".svg") ||
-        backgroundImage.toLowerCase().includes(".gif")
-      ) {
+      if (shouldExcludeImage(backgroundImage)) {
         return;
       }
+
       const existingData = state.imageDataMap.get(element);
 
       if (existingData) {
         // 既存データがある場合は切り替え
-        if (state.isBlackMode) {
-          element.style.backgroundImage = existingData.original;
-        } else {
-          element.style.backgroundImage = existingData.black;
-        }
+        element.style.backgroundImage = state.isBlackMode
+          ? existingData.original
+          : existingData.black;
       } else {
         // 新しい要素の場合は処理
         const rect = element.getBoundingClientRect();
@@ -348,7 +400,7 @@ const processPictureElements = (img, buddhaDataUrl, isRestore = false) => {
 const processIframes = () => {
   const iframes = document.querySelectorAll("iframe");
 
-  iframes.forEach((iframe, index) => {
+  iframes.forEach((iframe) => {
     // 小さいiframeは除外
     const width = iframe.offsetWidth || parseInt(iframe.width) || 0;
     const height = iframe.offsetHeight || parseInt(iframe.height) || 0;
@@ -427,16 +479,12 @@ const processIframes = () => {
 const toggleImages = () => {
   // img要素の処理
   const images = document.querySelectorAll("img");
-  let processedCount = 0;
-  let skippedCount = 0;
 
   images.forEach((img) => {
     if (!isTargetImage(img)) {
-      skippedCount++;
       return;
     }
 
-    // 既存のデータがあるかチェック
     const existingData = state.imageDataMap.get(img);
 
     if (existingData) {
@@ -453,8 +501,6 @@ const toggleImages = () => {
 
       // picture要素のsource要素も処理
       processPictureElements(img, existingData.black, state.isBlackMode);
-
-      processedCount++;
     } else {
       // 新しい画像の場合は処理
       const { width, height } = getImageSize(img);
@@ -487,9 +533,6 @@ const toggleImages = () => {
           // 実際の仏像画像を非同期で生成して更新
           generateActualBuddhaImage(width, height, img);
         }
-        processedCount++;
-      } else {
-        skippedCount++;
       }
     }
   });
