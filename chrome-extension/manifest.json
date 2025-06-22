@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Image Blackout Toggle",
   "version": "1.0",
-  "description": "ウェブページの画像を黒色に切り替えるChrome拡張機能",
+  "description": "ウェブページの画像をブッダに切り替えるChrome拡張機能",
   "permissions": ["activeTab", "storage", "tabs"],
   "content_scripts": [
     {
@@ -16,9 +16,9 @@
     "default_title": "Image Blackout Toggle"
   },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/buddha.png",
+    "48": "icons/buddha.png",
+    "128": "icons/buddha.png"
   },
   "web_accessible_resources": [
     {
