@@ -384,7 +384,7 @@ const processBackgroundImages = () => {
             black: `url("${buddhaDataUrl}")`,
           });
 
-          // 黒色モードでない場合（初回）は仏像画像に変更
+          // ブッダモードでない場合（初回）は仏像画像に変更
           if (!state.isBlackMode) {
             element.style.backgroundImage = `url("${buddhaDataUrl}")`;
           }
@@ -546,7 +546,7 @@ const toggleImages = () => {
           black: tempBuddhaDataUrl,
         });
 
-        // 黒色モードでない場合（初回）は仏像画像に変更
+        // ブッダモードでない場合（初回）は仏像画像に変更
         if (!state.isBlackMode) {
           img.src = tempBuddhaDataUrl;
 

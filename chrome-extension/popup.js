@@ -11,7 +11,7 @@ const state = {
 const updateUI = () => {
   if (state.isBlackMode) {
     toggleButton.textContent = "煩悩ON";
-    statusDiv.textContent = "黒色モード";
+    statusDiv.textContent = "ブッダモード";
   } else {
     toggleButton.textContent = "煩悩OFF";
     statusDiv.textContent = "通常モード";
