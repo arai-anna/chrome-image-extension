@@ -32,19 +32,37 @@ const toggleFeature = async () => {
     // UIを更新
     updateUI();
 
-    // アクティブなタブにメッセージを送信
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
+    // 全てのタブにメッセージを送信
+    try {
+      const tabs = await chrome.tabs.query({});
 
-    await chrome.tabs.sendMessage(tab.id, {
-      action: "toggleFeature",
-      isEnabled: state.isEnabled,
-    });
+      for (const tab of tabs) {
+        try {
+          // content scriptが読み込まれているタブにのみメッセージを送信
+          await chrome.tabs.sendMessage(tab.id, {
+            action: "toggleFeature",
+            isEnabled: state.isEnabled,
+          });
+        } catch (tabError) {
+          // 個別のタブでエラーが発生しても続行
+          console.log(
+            `タブ ${tab.id} へのメッセージ送信をスキップ:`,
+            tabError.message
+          );
+        }
+      }
+    } catch (messageError) {
+      console.log("メッセージ送信エラー:", messageError);
+      // メッセージ送信に失敗してもストレージには保存されているので続行
+    }
+
+    statusDiv.textContent = state.isEnabled ? "機能ON" : "機能OFF";
   } catch (error) {
     console.error("機能切り替えエラー:", error);
     statusDiv.textContent = "エラーが発生しました";
+    // エラーが発生した場合は状態を元に戻す
+    state.isEnabled = !state.isEnabled;
+    updateUI();
   }
 };
 
