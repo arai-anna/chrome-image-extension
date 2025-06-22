@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iframe テストページ</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f0f0f0;
+      }
+      .iframe-container {
+        margin: 20px 0;
+        padding: 10px;
+        border: 2px solid #333;
+        background-color: white;
+      }
+      iframe {
+        border: 1px solid #ccc;
+      }
+      h2 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>iframe テストページ</h1>
+    <p>Chrome拡張機能をテストするためのiframeが含まれたページです。</p>
+
+    <div class="iframe-container">
+      <h2>YouTube iframe (大きいサイズ)</h2>
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <div class="iframe-container">
+      <h2>Google Maps iframe (中サイズ)</h2>
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.747707654!2d139.69171!3d35.689487!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b563b00109f%3A0x337328def1e2ab26!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1640995200000!5m2!1sja!2sjp"
+        width="400"
+        height="300"
+        style="border: 0"
+        allowfullscreen=""
+        loading="lazy"
+      ></iframe>
+    </div>
+
+    <div class="iframe-container">
+      <h2>小さいiframe (除外されるべき)</h2>
+      <iframe
+        src="https://example.com"
+        width="30"
+        height="30"
+        style="border: 0"
+      ></iframe>
+    </div>
+
+    <div class="iframe-container">
+      <h2>通常のimg要素 (比較用)</h2>
+      <img
+        src="https://via.placeholder.com/300x200/0066cc/ffffff?text=Test+Image"
+        alt="テスト画像"
+        width="300"
+        height="200"
+      />
+    </div>
+
+    <script>
+      // デバッグ用：コンソールログを表示
+      console.log("iframe テストページが読み込まれました");
+
+      // 拡張機能のテスト用ボタン
+      const button = document.createElement("button");
+      button.textContent = "拡張機能テスト（コンソールを確認）";
+      button.style.cssText =
+        "padding: 10px 20px; font-size: 16px; margin: 20px 0; background: #a9a9a9; color: white; border: none; border-radius: 5px; cursor: pointer;";
+      button.onclick = () => {
+        console.log("=== 拡張機能テスト開始 ===");
+        console.log(
+          "iframes found:",
+          document.querySelectorAll("iframe").length
+        );
+        document.querySelectorAll("iframe").forEach((iframe, index) => {
+          console.log(`iframe ${index}:`, {
+            width: iframe.offsetWidth,
+            height: iframe.offsetHeight,
+            src: iframe.src,
+          });
+        });
+      };
+      document.body.appendChild(button);
+    </script>
+  </body>
+</html>

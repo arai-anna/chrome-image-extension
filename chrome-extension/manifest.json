@@ -3,7 +3,7 @@
   "name": "Image Blackout Toggle",
   "version": "1.0",
   "description": "ウェブページの画像を黒色に切り替えるChrome拡張機能",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -12,7 +12,7 @@
     }
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "settings.html",
     "default_title": "Image Blackout Toggle"
   },
   "icons": {
@@ -22,7 +22,28 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["image/cat1.jpg"],
+      "resources": [
+        "image/1.jpg",
+        "image/2.jpg",
+        "image/3.jpg",
+        "image/4.jpg",
+        "image/5.jpg",
+        "image/6.jpg",
+        "image/7.jpg",
+        "image/8.jpg",
+        "image/9.jpg",
+        "image/10.jpg",
+        "image/11.jpg",
+        "image/12.jpg",
+        "image/13.jpg",
+        "image/14.jpg",
+        "image/15.jpg",
+        "image/16.jpg",
+        "image/17.jpg",
+        "image/18.jpg",
+        "image/19.jpg",
+        "image/20.jpg"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

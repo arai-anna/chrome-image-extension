@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Image Blackout Toggle</title>
+    <title>Image Blackout Toggle Settings</title>
     <style>
       * {
         margin: 0;
@@ -60,14 +60,22 @@
         color: #666;
         text-align: center;
       }
+
+      .description {
+        font-size: 11px;
+        color: #888;
+        text-align: center;
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>画像切り替え</h1>
-      <button id="toggleButton">煩悩OFF</button>
-      <div id="status" class="status">通常モード</div>
+      <h1>画像切り替え機能</h1>
+      <button id="toggleButton">機能をONにする</button>
+      <div id="status" class="status">機能OFF</div>
+      <div class="description">ONにすると右上にボタンが表示されます</div>
     </div>
-    <script src="popup.js"></script>
+    <script src="settings.js"></script>
   </body>
 </html>

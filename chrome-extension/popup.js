@@ -10,10 +10,10 @@ const state = {
 // ボタンテキストとステータスを更新
 const updateUI = () => {
   if (state.isBlackMode) {
-    toggleButton.textContent = "元の画像に戻す";
+    toggleButton.textContent = "煩悩ON";
     statusDiv.textContent = "黒色モード";
   } else {
-    toggleButton.textContent = "画像を黒色に変更";
+    toggleButton.textContent = "煩悩OFF";
     statusDiv.textContent = "通常モード";
   }
 };
